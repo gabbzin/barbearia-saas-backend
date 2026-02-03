@@ -1,3 +1,4 @@
+import type { Barber } from "./generated";
 import { prisma } from "./prisma";
 
 async function seedDatabase() {
@@ -120,33 +121,19 @@ async function seedDatabase() {
     ];
 
     for (const plan of Plans) {
-      await prisma.plan.upsert({
-        where: { id: plan.id },
-        update: {
-          name: plan.name,
-          description: plan.description,
-          priceInCents: plan.priceInCents,
-          stripePriceId: plan.stripePriceId,
-        },
-        create: plan,
+      await prisma.plan.create({
+        data: plan,
       });
     }
 
-    const barbershops = [];
+    const barbers: Barber[] = [];
     for (let i = 0; i < barberNames.length; i++) {
       const name = barberNames[i];
       const imageUrl = images[i];
       const email = `${name.toLowerCase().replace(/ /g, ".")}@barber.com`;
 
-      const user = await prisma.user.upsert({
-        where: { email },
-        update: {
-          name,
-          emailVerified: true,
-          role: "BARBER",
-          image: imageUrl,
-        },
-        create: {
+      const user = await prisma.user.create({
+        data: {
           id: `barber-${i + 1}`,
           name,
           email,
@@ -156,13 +143,8 @@ async function seedDatabase() {
         },
       });
 
-      const barber = await prisma.barber.upsert({
-        where: { userId: user.id },
-        update: {
-          imageUrl,
-          phone: ["(11) 99999-9999"],
-        },
-        create: {
+      const barber = await prisma.barber.create({
+        data: {
           imageUrl,
           phone: ["(11) 99999-9999"],
           userId: user.id,
@@ -170,24 +152,22 @@ async function seedDatabase() {
       });
 
       for (const service of services) {
-        const exists = await prisma.barberService.findFirst({
-          where: { name: service.name, barberId: barber.id },
-        });
-
-        if (!exists) {
-          await prisma.barberService.create({
-            data: {
-              name: service.name,
-              description: service.description,
-              priceInCents: Math.round(service.price * 100),
-              barber: { connect: { id: barber.id } },
-              imageUrl: service.imageUrl,
+        await prisma.barberService.create({
+          data: {
+            name: service.name,
+            description: service.description,
+            priceInCents: service.price * 100,
+            barber: {
+              connect: {
+                id: barber.id,
+              },
             },
-          });
-        }
+            imageUrl: service.imageUrl,
+          },
+        });
       }
 
-      barbershops.push(barber);
+      barbers.push(barber);
     }
 
     // Criar usuário cliente para os agendamentos
@@ -202,7 +182,7 @@ async function seedDatabase() {
     });
 
     // Criar agendamentos passados para o primeiro barbeiro
-    const firstBarber = barbershops[0];
+    const firstBarber = barbers[0];
     const barberServices = await prisma.barberService.findMany({
       where: { barberId: firstBarber.id },
       take: 4,
@@ -238,12 +218,10 @@ async function seedDatabase() {
     const endTime = "21:00";
 
     // Criar disponibilidade para os barbeiros
-    for (const barber of barbershops) {
+    for (const barber of barbers) {
       for (let day = 1; day <= 5; day++) {
-        await prisma.disponibility.upsert({
-          where: { barberId_dayOfWeek: { barberId: barber.id, dayOfWeek: day } },
-          update: { startTime: startTime, endTime: endTime },
-          create: {
+        await prisma.disponibility.create({
+          data: {
             barberId: barber.id,
             dayOfWeek: day, // Segunda-feira a sexta-feira
             startTime: startTime,
@@ -254,7 +232,7 @@ async function seedDatabase() {
     }
 
     console.log("✅ Seed concluído com sucesso!");
-    console.log(`- ${barbershops.length} barbeiros criados`);
+    console.log(`- ${barbers.length} barbeiros criados`);
     console.log(`- ${pastDates.length} agendamentos passados criados`);
     console.log(`- ${Plans.length} planos criados`);
     console.log(
