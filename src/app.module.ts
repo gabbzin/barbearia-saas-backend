@@ -15,6 +15,7 @@ import {
 	I18nModule,
 	QueryResolver,
 } from "nestjs-i18n";
+import { BarberServiceModule } from "./modules/barber-service/barber-service.module";
 import path from "path";
 
 @Module({
@@ -47,6 +48,7 @@ import path from "path";
 		BarberModule,
 		UserModule,
 		BookingModule,
+		BarberServiceModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],
