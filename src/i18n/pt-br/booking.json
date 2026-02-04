@@ -1,0 +1,8 @@
+{
+	"errors": {
+		"BOOKING_PAST_DATE": "A data da reserva não pode ser no passado.",
+		"EXISTING_BOOKING_AT_DATE": "Já existe uma reserva na data e hora selecionadas.",
+		"BOOKING_NOT_FOUND": "Reserva não encontrada."
+	},
+	"SUCCESS_BOOKING_CANCELLED": "Reserva cancelada com sucesso."
+}

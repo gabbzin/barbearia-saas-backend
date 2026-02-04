@@ -1,0 +1,8 @@
+{
+	"errors": {
+		"BOOKING_PAST_DATE": "The booking date cannot be in the past.",
+		"EXISTING_BOOKING_AT_DATE": "There is already a booking at the selected date and time.",
+		"BOOKING_NOT_FOUND": "Booking not found."
+	},
+	"SUCCESS_BOOKING_CANCELLED": "Booking successfully cancelled."
+}
