@@ -1,5 +1,5 @@
+import { prisma } from ".";
 import type { Barber } from "./generated";
-import { prisma } from "./prisma";
 
 async function seedDatabase() {
   try {
@@ -89,7 +89,7 @@ async function seedDatabase() {
     ];
 
     // Criar planos de assinatura
-    const Plans = [
+    const plans = [
       {
         id: "plano-1",
         name: "Hair",
@@ -120,7 +120,7 @@ async function seedDatabase() {
       },
     ];
 
-    for (const plan of Plans) {
+    for (const plan of plans) {
       await prisma.plan.create({
         data: plan,
       });
@@ -234,15 +234,15 @@ async function seedDatabase() {
     console.log("✅ Seed concluído com sucesso!");
     console.log(`- ${barbers.length} barbeiros criados`);
     console.log(`- ${pastDates.length} agendamentos passados criados`);
-    console.log(`- ${Plans.length} planos criados`);
+    console.log(`- ${plans.length} planos criados`);
     console.log(
       `- Configurações de disponibilidade criadas para cada barbeiro iniciando as ${startTime} até ${endTime} de segunda a sexta.`,
     );
-
+  } catch (error) {
+    console.error("Erro ao executar o seed:", error);
+  } finally {
     // Fechar a conexão com o banco de dados
     await prisma.$disconnect();
-  } catch (error) {
-    console.error("Erro ao criar as barbearias:", error);
   }
 }
 
