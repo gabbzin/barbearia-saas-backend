@@ -1,6 +1,7 @@
 import {
 	Body,
 	Controller,
+	Delete,
 	Get,
 	HttpCode,
 	HttpStatus,
@@ -8,7 +9,12 @@ import {
 	UseGuards,
 } from "@nestjs/common";
 import { BookingService } from "./booking.service";
-import { AuthGuard, Session, UserSession } from "@thallesp/nestjs-better-auth";
+import {
+	AuthGuard,
+	Roles,
+	Session,
+	UserSession,
+} from "@thallesp/nestjs-better-auth";
 import { CreateBookingDto } from "./dto/create-booking.dto";
 
 @Controller("booking")
@@ -21,6 +27,7 @@ export class BookingController {
 		return this.bookingService.findAllByUserId(session.user.id);
 	}
 
+	// ===== Usuários =====
 	@Post()
 	@HttpCode(HttpStatus.CREATED)
 	@UseGuards(AuthGuard)
@@ -29,5 +36,28 @@ export class BookingController {
 		@Body() body: CreateBookingDto
 	) {
 		return this.bookingService.create(session.user.id, body);
+	}
+
+	@Delete()
+	@HttpCode(HttpStatus.NO_CONTENT)
+	@UseGuards(AuthGuard)
+	async cancelBooking(
+		@Session() session: UserSession,
+		@Body("bookingId") bookingId: string
+	) {
+		return this.bookingService.cancel(session.user.id, bookingId);
+	}
+
+	// ===== Barbeiros =====
+
+	@Post()
+	@HttpCode(HttpStatus.OK)
+	@UseGuards(AuthGuard)
+	@Roles(["BARBER"])
+	async confirmBooking(
+		@Session() session: UserSession,
+		@Body("bookingId") bookingId: string
+	) {
+		return this.bookingService.confirm(session.user.id, bookingId);
 	}
 }

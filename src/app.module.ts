@@ -20,7 +20,7 @@ import path from "path";
 @Module({
 	imports: [
 		I18nModule.forRoot({
-			fallbackLanguage: "pt-BR",
+			fallbackLanguage: "pt-br",
 			loaderOptions: {
 				path: path.join(process.cwd(), "src/i18n/"),
 				watch: true,
