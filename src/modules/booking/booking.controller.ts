@@ -60,4 +60,6 @@ export class BookingController {
 	) {
 		return this.bookingService.confirm(session.user.id, bookingId);
 	}
+
+	// (Opcional) Endpoint para editar o horário da reserva com até 2 horas de antecedência
 }
