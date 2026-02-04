@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { LoginUserDto } from './dto/login-user.dto';
-import { auth } from 'src/lib/auth';
+import { auth } from 'src/modules/auth/lib/auth';
 import { RegisterUserDto } from './dto/register-user.dto';
 
 @Injectable()
@@ -40,5 +40,9 @@ export class AuthService {
     } catch (error) {
       throw new UnauthorizedException("Could not register user");
     }
+  }
+
+  async signOut() {
+    await auth.api.signOut();
   }
 }

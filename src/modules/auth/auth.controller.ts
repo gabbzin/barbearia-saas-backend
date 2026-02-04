@@ -18,4 +18,10 @@ export class AuthController {
   signUp(@Body() data: RegisterUserDto) {
     return this.authService.signUp(data);
   }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('logout')
+  signOut() {
+    return this.authService.signOut();
+  }
 }
