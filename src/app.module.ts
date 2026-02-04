@@ -5,12 +5,18 @@ import { AppService } from "./app.service";
 import { auth } from "./modules/auth/lib/auth";
 import { UserModule } from "./modules/user/user.module";
 import { ConfigModule } from "@nestjs/config";
+import { BarberModule } from "./modules/barber/barber.module";
+import { PrismaService } from "./modules/database/prisma.service";
+import { PrismaModule } from "./modules/database/prisma.module";
 
 @Module({
 	imports: [
 		ConfigModule.forRoot({ isGlobal: true }),
-		UserModule,
+		PrismaModule,
+
 		AuthModule.forRoot({ auth }),
+		BarberModule,
+		UserModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],
