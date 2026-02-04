@@ -1,5 +1,5 @@
 import { prisma } from ".";
-import type { Barber } from "./generated";
+import type { Barber } from "@prisma/client";
 
 async function seedDatabase() {
   try {
