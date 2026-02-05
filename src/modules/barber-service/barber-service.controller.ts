@@ -32,7 +32,10 @@ export class BarberServiceController {
 	@Patch(":id")
 	@UseGuards(AuthGuard)
 	updateService(id: string, data: Partial<BarberServiceDto>) {
-		return this.barberServiceService.update(id, data);
+		return this.barberServiceService.update(id, {
+			...data,
+			priceInCents: data.priceInCents ? data.priceInCents * 100 : undefined,
+		});
 	}
 
 	@Delete(":id")
