@@ -1,0 +1,5 @@
+{
+	"errors": {
+		"USER_ALREADY_EXISTS": "Usuário já está cadastrado neste tenant."
+	}
+}
