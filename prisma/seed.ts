@@ -1,7 +1,11 @@
-import { prisma } from ".";
+import { PrismaService } from "src/modules/database/prisma.service";
 import type { Barber } from "@prisma/client";
 
 async function seedDatabase() {
+  const prismaService = new PrismaService();
+
+  const prisma = prismaService.client;
+
   try {
     const images = [
       "https://utfs.io/f/c97a2dc9-cf62-468b-a851-bfd2bdde775f-16p.png",
