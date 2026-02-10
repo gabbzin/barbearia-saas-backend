@@ -1,12 +1,10 @@
 import { Module } from "@nestjs/common";
-import { AuthModule } from "@thallesp/nestjs-better-auth";
+import { AuthModule } from "./modules/auth/auth.module";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
-import { auth } from "./modules/auth/lib/auth";
 import { UserModule } from "./modules/user/user.module";
 import { ConfigModule } from "@nestjs/config";
 import { BarberModule } from "./modules/barber/barber.module";
-import { PrismaService } from "./modules/database/prisma.service";
 import { PrismaModule } from "./modules/database/prisma.module";
 import { BookingModule } from "./modules/booking/booking.module";
 import {
@@ -41,10 +39,10 @@ import path from "path";
 				"src/generated/i18n.generated.ts"
 			),
 		}),
-		ConfigModule.forRoot({ isGlobal: true }),
+		ConfigModule.forRoot({ isGlobal: true, envFilePath: ".env" }),
 		PrismaModule,
 
-		AuthModule.forRoot({ auth }),
+		AuthModule,
 		BarberModule,
 		UserModule,
 		BookingModule,

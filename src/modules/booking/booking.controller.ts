@@ -9,13 +9,9 @@ import {
 	UseGuards,
 } from "@nestjs/common";
 import { BookingService } from "./booking.service";
-import {
-	AuthGuard,
-	Roles,
-	Session,
-	UserSession,
-} from "@thallesp/nestjs-better-auth";
+import { Roles, Session, UserSession } from "@thallesp/nestjs-better-auth";
 import { CreateBookingDto } from "./dto/create-booking.dto";
+import { AuthGuard } from "../auth/auth.guard";
 
 @Controller("booking")
 export class BookingController {

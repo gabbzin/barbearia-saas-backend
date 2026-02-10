@@ -7,7 +7,7 @@ import {
 	UseGuards,
 } from "@nestjs/common";
 import { BarberServiceService } from "./barber-service.service";
-import { AuthGuard } from "@thallesp/nestjs-better-auth";
+import { AuthGuard } from "../auth/auth.guard";
 import { BarberServiceDto } from "./dto/barber-service.dto";
 
 @Controller("barber-service")
