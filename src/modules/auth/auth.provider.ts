@@ -1,3 +1,4 @@
+import { ConfigService } from "@nestjs/config";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { PrismaService } from "src/modules/database/prisma.service";
@@ -7,12 +8,12 @@ export const AUTH = "AUTH_INSTANCE";
 
 export const AuthProvider = {
 	provide: AUTH,
-	inject: [PrismaService],
-	useFactory: (prisma: PrismaService) =>
+	inject: [PrismaService, ConfigService],
+	useFactory: (prisma: PrismaService, config: ConfigService) =>
 		betterAuth({
-			basePath: "/api/auth",
-			baseURL: process.env.BETTER_AUTH_URL as string,
-			secret: process.env.BETTER_AUTH_SECRET as string,
+			baseURL:
+				config.getOrThrow<string>("BETTER_AUTH_URL") || "http://localhost:3000/auth",
+			secret: config.getOrThrow<string>("BETTER_AUTH_SECRET"),
 			database: prismaAdapter(prisma, { provider: "postgresql" }),
 			emailAndPassword: {
 				enabled: true,

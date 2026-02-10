@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, RequestMethod } from "@nestjs/common";
 import { AuthModule } from "./modules/auth/auth.module";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
@@ -15,6 +15,7 @@ import {
 } from "nestjs-i18n";
 import { BarberServiceModule } from "./modules/barber-service/barber-service.module";
 import path from "path";
+import { json } from "express";
 
 @Module({
 	imports: [
@@ -51,4 +52,14 @@ import path from "path";
 	controllers: [AppController],
 	providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+	configure(consumer: MiddlewareConsumer) {
+		consumer
+			.apply(json())
+			.exclude(
+				{ path: "auth", method: RequestMethod.ALL },
+				{ path: "auth/*path", method: RequestMethod.ALL }
+			)
+			.forRoutes("*");
+	}
+}
