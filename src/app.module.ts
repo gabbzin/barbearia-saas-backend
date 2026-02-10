@@ -16,6 +16,7 @@ import {
 import { BarberServiceModule } from "./modules/barber-service/barber-service.module";
 import path from "path";
 import { json } from "express";
+import { TenantsModule } from './modules/tenants/tenants.module';
 
 @Module({
 	imports: [
@@ -48,6 +49,7 @@ import { json } from "express";
 		UserModule,
 		BookingModule,
 		BarberServiceModule,
+		TenantsModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],

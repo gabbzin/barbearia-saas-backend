@@ -4,12 +4,13 @@ import { PrismaModule } from "../database/prisma.module";
 import { AuthGuard } from "./auth.guard";
 import { ConfigModule } from "@nestjs/config";
 import { AuthController } from "./auth.controller";
+import { AuthService } from "./auth.service";
 
 @Global()
 @Module({
 	imports: [PrismaModule, ConfigModule],
 	controllers: [AuthController],
-	exports: [AUTH, AuthGuard],
-	providers: [AuthProvider, AuthGuard],
+	exports: [AUTH, AuthGuard, AuthService],
+	providers: [AuthProvider, AuthGuard, AuthService],
 })
 export class AuthModule {}
