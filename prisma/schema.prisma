@@ -14,7 +14,7 @@ model User {
   image            String?
   email            String       @unique
   emailVerified    Boolean      @default(false)
-  passwordHash     String?
+  password         String?
   stripeCustomerId String?
   tenantId         String?
   createdAt        DateTime     @default(now())

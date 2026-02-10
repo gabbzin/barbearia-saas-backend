@@ -1,5 +1,8 @@
 {
 	"errors": {
 		"USER_ALREADY_EXISTS": "Usuário já está cadastrado neste tenant."
+	},
+	"success": {
+		"USER_CREATED": "Usuário criado com sucesso."
 	}
 }

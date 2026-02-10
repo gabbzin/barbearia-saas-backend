@@ -1,0 +1,5 @@
+{
+	"errors": {
+		"TENANT_ID_REQUIRED": "O tenantId é obrigatório para criar um usuário."
+	}
+}
