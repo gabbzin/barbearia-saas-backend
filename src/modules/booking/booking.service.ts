@@ -1,21 +1,29 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, Scope } from "@nestjs/common";
 import { PrismaService } from "../database/prisma.service";
 import { CreateBookingDto } from "./dto/create-booking.dto";
 import { I18nService } from "nestjs-i18n";
 import { endOfDay, format, startOfDay } from "date-fns";
+import { TenantBase } from "src/packages/tenantBase";
+import { REQUEST } from "@nestjs/core";
 
-@Injectable()
-export class BookingService {
+@Injectable({ scope: Scope.REQUEST })
+export class BookingService extends TenantBase {
 	constructor(
-		private readonly prisma: PrismaService,
-		private readonly i18n: I18nService
-	) {}
+		protected readonly prisma: PrismaService,
+		private readonly i18n: I18nService,
+		@Inject(REQUEST) private readonly request: Request
+	) {
+		super(prisma);
+	}
 
 	private intervalBetweenBookingsInMinutes = 30;
 
-	// ===== Private Methods =====
-	private timeToMinutes = (time: string) => {
-		const [hours, minutes] = time.split(":").map(Number);
+	// ================= Private Methods =================
+
+	// Função para converter "HH:mm" em minutos (ex: "14:30" => 870)
+	private timeToMinutes = (time: Date) => {
+		const hours = time.getHours();
+		const minutes = time.getMinutes();
 		return hours * 60 + minutes;
 	};
 
@@ -28,11 +36,11 @@ export class BookingService {
 		return `${h}:${m}`;
 	};
 
-	// ===== Public Methods =====
+	// ================== Public Methods ==================
 
 	async findAllByUserId(userId: string) {
 		try {
-			const result = await this.prisma.client.booking.findMany({
+			const result = await this.prisma.tenant.booking.findMany({
 				where: {
 					userId,
 				},
@@ -64,7 +72,7 @@ export class BookingService {
 			);
 		}
 
-		const service = await this.prisma.client.barberService.findUnique({
+		const service = await this.prisma.tenant.barberService.findUnique({
 			where: { id: serviceId },
 		});
 
@@ -74,7 +82,7 @@ export class BookingService {
 			);
 		}
 
-		const existingBooking = await this.prisma.client.booking.findFirst({
+		const existingBooking = await this.prisma.tenant.booking.findFirst({
 			where: {
 				date,
 				status: "SCHEDULED",
@@ -88,11 +96,16 @@ export class BookingService {
 			);
 		}
 
-		const booking = await this.prisma.client.booking.create({
+		// Buscando o tenantId do contexto usando o método da classe abstrata base
+		const tenantId = this.getTenantId(this.request.headers);
+
+		// Usando o modelo livre do Prisma para enviar o tenantId sem problemas
+		const booking = await this.prisma.booking.create({
 			data: {
 				barberId: service.barberId,
 				serviceId,
 				userId,
+				tenantId,
 				date,
 				priceInCents: service.priceInCents,
 			},
@@ -102,7 +115,7 @@ export class BookingService {
 	}
 
 	async cancel(userId: string, id: string) {
-		const booking = await this.prisma.client.booking.findUnique({
+		const booking = await this.prisma.tenant.booking.findFirst({
 			where: { id, userId },
 		});
 
@@ -112,7 +125,7 @@ export class BookingService {
 			);
 		}
 
-		await this.prisma.client.booking.update({
+		await this.prisma.tenant.booking.update({
 			where: { id },
 			data: { status: "CANCELLED" },
 		});
@@ -122,8 +135,12 @@ export class BookingService {
 
 	// Rota exclusiva para o barbeiro
 	async confirm(bookingId: string, userId: string) {
-		const barberId = await this.prisma.client.barber.findUnique({
-			where: { userId: userId },
+		// Buscando o tenantId do contexto usando o método da classe abstrata base
+		const tenantId = this.getTenantId(this.request.headers);
+
+		// Usando o modelo livre do Prisma para enviar o tenantId sem problemas
+		const barberId = await this.prisma.barber.findUnique({
+			where: { userId_tenantId: { userId, tenantId } },
 			select: { id: true },
 		});
 
@@ -133,7 +150,7 @@ export class BookingService {
 			);
 		}
 
-		return await this.prisma.client.booking.update({
+		return await this.prisma.tenant.booking.update({
 			where: {
 				id: bookingId,
 				barberId: barberId?.id,
@@ -147,7 +164,7 @@ export class BookingService {
 	// ===== Métodos adicionais podem ser adicionados aqui =====
 	async getDateAvailableTimeSlots(barberId: string, date: Date) {
 		// Lógica para obter os horários disponíveis para agendamento
-		const bookings = await this.prisma.client.booking.findMany({
+		const bookings = await this.prisma.tenant.booking.findMany({
 			where: {
 				barberId,
 				date: {
@@ -166,17 +183,19 @@ export class BookingService {
 		// Dia 0 (Domingo) a 6 (Sábado)
 		const day = date.getDay();
 
-		const availability = await this.prisma.client.disponibility.findFirst({
-			where: {
-				barberId,
-				dayOfWeek: day,
-			},
-			select: {
-				dayOfWeek: true,
-				startTime: true,
-				endTime: true,
-			},
-		});
+		const availability = await this.prisma.tenant.barberDisponibility.findFirst(
+			{
+				where: {
+					barberId,
+					dayOfWeek: day,
+				},
+				select: {
+					dayOfWeek: true,
+					startTime: true,
+					endTime: true,
+				},
+			}
+		);
 
 		if (!availability) {
 			return []; // Sem disponibilidade para este dia

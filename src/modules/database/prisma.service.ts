@@ -91,7 +91,7 @@ export class PrismaService
 										"Tentativa de criar registro sem contexto de Tenant (tenantId ausente)."
 									);
 								}
-								
+
 								if (Array.isArray(anyArgs.data)) {
 									anyArgs.data = anyArgs.data.map((item: any) => ({
 										...item,
