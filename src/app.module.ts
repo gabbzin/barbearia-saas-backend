@@ -16,7 +16,7 @@ import {
 import { BarberServiceModule } from "./modules/barber-service/barber-service.module";
 import path from "path";
 import { json } from "express";
-import { TenantsModule } from './modules/tenants/tenants.module';
+import { TenantsModule } from './modules/barbershops/barbershops.module';
 
 @Module({
 	imports: [

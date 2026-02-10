@@ -1,4 +1,9 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from "@nestjs/common";
+import {
+	Injectable,
+	OnModuleInit,
+	OnModuleDestroy,
+	BadRequestException,
+} from "@nestjs/common";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
@@ -28,15 +33,25 @@ export class PrismaService
 		await this.$disconnect();
 	}
 
-	get client() {
+	/**
+	 * 🔓 ACESSO GLOBAL (SYSTEM LEVEL)
+	 * Use 'this.prisma' para Auth, Webhooks, CronJobs e Admin
+	 */
+
+	/**
+	 * 🔒 ACESSO ESCOPADO (TENANT LEVEL)
+	 * Use 'this.prisma.tenant.model...' para rotas de negócio
+	 */
+	get tenant() {
 		const store = tenantStorage.getStore();
 		const tenantId = store?.tenantId;
 
-		if (tenantId) {
-			return this.getTenantClient(tenantId);
+		if (!tenantId) {
+			throw new BadRequestException(
+				"Operação requer contexto de Tenant, mas nenhum foi encontrado."
+			);
 		}
-
-		return this;
+		return this.getTenantClient(tenantId);
 	}
 
 	private getTenantClient(tenantId: string) {
@@ -71,6 +86,12 @@ export class PrismaService
 
 							// Criação
 							if (operation === "create" || operation === "createMany") {
+								if (!tenantId) {
+									throw new BadRequestException(
+										"Tentativa de criar registro sem contexto de Tenant (tenantId ausente)."
+									);
+								}
+								
 								if (Array.isArray(anyArgs.data)) {
 									anyArgs.data = anyArgs.data.map((item: any) => ({
 										...item,

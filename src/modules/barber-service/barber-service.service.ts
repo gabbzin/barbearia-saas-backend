@@ -7,13 +7,13 @@ export class BarberServiceService {
 	constructor(private readonly prisma: PrismaService) {}
 
 	async getServicesByBarberId(barberId: string) {
-		return this.prisma.client.barberService.findMany({
+		return this.prisma.tenant.barberService.findMany({
 			where: { barberId },
 		});
 	}
 
 	async create(data: BarberServiceDto, barberId: string) {
-		return this.prisma.client.barberService.create({
+		return this.prisma.tenant.barberService.create({
 			data: {
 				...data,
 				barberId,
@@ -21,15 +21,15 @@ export class BarberServiceService {
 		});
 	}
 	async update(id: string, data: Partial<BarberServiceDto>) {
-		return this.prisma.client.barberService.update({
+		return this.prisma.tenant.barberService.update({
 			where: { id },
 			data,
 		});
 	}
 
-  async delete(id: string) {
-    return this.prisma.client.barberService.delete({
-      where: { id },
-    });
-  }
+	async delete(id: string) {
+		return this.prisma.tenant.barberService.delete({
+			where: { id },
+		});
+	}
 }
