@@ -16,7 +16,8 @@ import {
 import { BarberServiceModule } from "./modules/barber-service/barber-service.module";
 import path from "path";
 import { json } from "express";
-import { TenantsModule } from './modules/barbershops/barbershops.module';
+import { BarbershopsModule } from "./modules/barbershops/barbershops.module";
+import { TenantMiddleware } from "./middlewares/tenant.middleware";
 
 @Module({
 	imports: [
@@ -49,7 +50,7 @@ import { TenantsModule } from './modules/barbershops/barbershops.module';
 		UserModule,
 		BookingModule,
 		BarberServiceModule,
-		TenantsModule,
+		BarbershopsModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],
@@ -62,6 +63,11 @@ export class AppModule {
 				{ path: "auth", method: RequestMethod.ALL },
 				{ path: "auth/*path", method: RequestMethod.ALL }
 			)
+			.forRoutes("*");
+
+		consumer
+			.apply(TenantMiddleware)
+			.exclude({ path: "barbershops", method: RequestMethod.GET })
 			.forRoutes("*");
 	}
 }

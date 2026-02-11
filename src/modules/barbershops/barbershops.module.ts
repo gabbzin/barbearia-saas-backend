@@ -1,11 +1,11 @@
 import { Module } from "@nestjs/common";
-import { TenantsService } from "./barbershops.service";
-import { TenantsController } from "./barbershops.controller";
+import { BarbershopsService } from "./barbershops.service";
+import { BarbershopsController } from "./barbershops.controller";
 import { AuthModule } from "../auth/auth.module";
 
 @Module({
 	imports: [AuthModule],
-	controllers: [TenantsController],
-	providers: [TenantsService],
+	controllers: [BarbershopsController],
+	providers: [BarbershopsService],
 })
-export class TenantsModule {}
+export class BarbershopsModule {}

@@ -1,9 +1,11 @@
 import {
+	BadRequestException,
 	Controller,
 	Delete,
 	Get,
 	Patch,
 	Post,
+	Query,
 	UseGuards,
 } from "@nestjs/common";
 import { BarberServiceService } from "./barber-service.service";
@@ -16,8 +18,21 @@ export class BarberServiceController {
 
 	@Get()
 	@UseGuards(AuthGuard)
-	getServicesByBarberId(barberId: string) {
-		return this.barberServiceService.getServicesByBarberId(barberId);
+	getServices(
+		@Query("barberId") barberId: string,
+		@Query("serviceId") serviceId: string
+	) {
+		if (serviceId) {
+			return this.barberServiceService.getServiceById(serviceId);
+		}
+
+		if (barberId) {
+			return this.barberServiceService.getServicesByBarberId(barberId);
+		}
+
+		throw new BadRequestException(
+			"É necessário fornecer barberId ou serviceId como query parameter"
+		);
 	}
 
 	@Post()

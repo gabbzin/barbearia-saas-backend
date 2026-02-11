@@ -18,6 +18,12 @@ export class BarberServiceService extends TenantBase {
 		});
 	}
 
+	async getServiceById(id: string) {
+		return this.prisma.tenant.barberService.findUnique({
+			where: { id },
+		});
+	}
+
 	async create(data: BarberServiceDto, barberId: string) {
 		// Buscando o tenantId do contexto usando o método da classe abstrata base
 		const tenantId = this.getTenantId(this.request.headers);
