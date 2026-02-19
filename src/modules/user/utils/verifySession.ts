@@ -38,10 +38,10 @@ export async function verifySession(
 		email: session.user.email,
 		name: session.user.name,
 		image: session.user.image,
-		role: userTenant?.role || "user",
+		role: userTenant?.role,
 		// stripeCustomerId: session.user.stripeCustomerId,
 		tenantId,
-		sessionId: session.session,
+		session: session.session,
 		barberId: barber?.id || null,
 	};
 }
