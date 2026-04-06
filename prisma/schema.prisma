@@ -130,8 +130,8 @@ model BarberService {
   priceInCents      Int
   durationInMinutes Int        @default(30)
   barberId          String
-  tenantId          String
   barber            Barber     @relation(fields: [barberId], references: [id])
+  tenantId          String
   tenant            Barbershop @relation(fields: [tenantId], references: [id])
   bookings          Booking[]
 

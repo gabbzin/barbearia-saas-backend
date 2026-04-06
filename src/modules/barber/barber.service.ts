@@ -27,12 +27,12 @@ export class BarberService {
 
 	async findUnique(id: string) {
 		try {
-			const result = await this.prisma.client.barber.findUnique({
+			const result = await this.prisma.tenant.barber.findUnique({
 				where: { id },
 				include: {
 					user: {
 						omit: {
-							passwordHash: true,
+							password: true,
 							stripeCustomerId: true,
 							id: true,
 						},

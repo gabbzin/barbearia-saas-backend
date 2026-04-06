@@ -1,4 +1,8 @@
-import { Injectable, NestMiddleware } from "@nestjs/common";
+import {
+	Injectable,
+	NestMiddleware,
+	UnauthorizedException,
+} from "@nestjs/common";
 import { tenantStorage } from "src/storages/tenant-context.storage";
 
 @Injectable()
@@ -7,7 +11,9 @@ export class TenantMiddleware implements NestMiddleware {
 		const tenantId = req.headers["x-tenant-id"];
 
 		if (!tenantId) {
-			return next();
+			throw new UnauthorizedException(
+				"Tenant ID is missing in the request headers"
+			);
 		}
 
 		tenantStorage.run({ tenantId }, () => next());

@@ -10,21 +10,33 @@ export class AuthService {
 		@Inject(AUTH) private readonly auth: AuthType
 	) {}
 
-	async registerClientInTenant(data: {
-		name: string;
-		email: string;
-		password: string;
-		tenantId: string;
-	}) {
-		const { name, email, password, tenantId } = data;
+	async registerClientInTenant(
+		data: {
+			name: string;
+			email: string;
+			password: string;
+		},
+		tenantId: string
+	) {
+		const { name, email, password } = data;
 
 		if (!tenantId) {
 			throw new BadRequestException(
-				this.i18n.t("tenant.errors.TENANT_ID_REQUIRED")
+				"Tenant ID é obrigatório no header 'x-tenant-id'"
 			);
 		}
 
+		// Verificar se o tenant existe
+		const tenant = await this.prisma.barbershop.findUnique({
+			where: { id: tenantId },
+		});
+
+		if (!tenant) {
+			throw new BadRequestException(`Barbearia não encontrada`);
+		}
+
 		let user = await this.prisma.user.findUnique({ where: { email } });
+
 		let newUser;
 
 		if (!user) {
@@ -40,10 +52,12 @@ export class AuthService {
 			newUser = response.user;
 		}
 
+		const userId: string = newUser ? newUser.id : user!.id;
+
 		const existingLink = await this.prisma.userTenant.findUnique({
 			where: {
 				userId_tenantId: {
-					userId: newUser ? newUser.id : user!.id,
+					userId,
 					tenantId,
 				},
 			},
@@ -57,7 +71,7 @@ export class AuthService {
 
 		await this.prisma.userTenant.create({
 			data: {
-				userId: newUser ? newUser.id : user!.id,
+				userId,
 				tenantId,
 				role: "CLIENT",
 			},

@@ -1,12 +1,12 @@
 import { Controller, Get } from "@nestjs/common";
-import { TenantsService } from "./barbershops.service";
+import { BarbershopsService } from "./barbershops.service";
 
-@Controller("tenants")
-export class TenantsController {
-	constructor(private readonly tenantsService: TenantsService) {}
+@Controller("barbershops")
+export class BarbershopsController {
+	constructor(private readonly barbershopsService: BarbershopsService) {}
 
 	@Get()
 	findAll() {
-		return this.tenantsService.findAll();
+		return this.barbershopsService.findAll();
 	}
 }
