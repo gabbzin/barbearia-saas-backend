@@ -1,20 +1,32 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { BookingController } from './booking.controller';
-import { BookingService } from './booking.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { BookingController } from "./booking.controller";
+import { BookingService } from "./booking.service";
 
-describe('BookingController', () => {
-  let controller: BookingController;
+describe("BookingController", () => {
+	let controller: BookingController;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [BookingController],
-      providers: [BookingService],
-    }).compile();
+	const bookingServiceMock = {
+		findAllByUserId: jest.fn(),
+		create: jest.fn(),
+		cancel: jest.fn(),
+		confirm: jest.fn(),
+	};
 
-    controller = module.get<BookingController>(BookingController);
-  });
+	beforeEach(async () => {
+		const module: TestingModule = await Test.createTestingModule({
+			controllers: [BookingController],
+			providers: [
+				{
+					provide: BookingService,
+					useValue: bookingServiceMock,
+				},
+			],
+		}).compile();
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
+		controller = module.get<BookingController>(BookingController);
+	});
+
+	it("should be defined", () => {
+		expect(controller).toBeDefined();
+	});
 });

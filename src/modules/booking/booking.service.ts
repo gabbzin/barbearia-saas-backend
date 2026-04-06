@@ -139,8 +139,8 @@ export class BookingService extends TenantBase {
 		const tenantId = this.getTenantId(this.request.headers);
 
 		// Usando o modelo livre do Prisma para enviar o tenantId sem problemas
-		const barberId = await this.prisma.barber.findUnique({
-			where: { userId_tenantId: { userId, tenantId } },
+		const barberId = await this.prisma.barber.findFirst({
+			where: { userId, tenantId },
 			select: { id: true },
 		});
 

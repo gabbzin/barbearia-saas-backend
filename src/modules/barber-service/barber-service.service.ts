@@ -38,7 +38,7 @@ export class BarberServiceService extends TenantBase {
 
 		const serviceResponse = {
 			...service,
-			barber: service.barber.user.name,
+			barber: service.barber.user?.name ?? "Barbeiro",
 		};
 
 		return serviceResponse;

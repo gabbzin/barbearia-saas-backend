@@ -1,17 +1,26 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { TenantsController } from "./barbershops.controller";
-import { TenantsService } from "./barbershops.service";
+import { BarbershopsController } from "./barbershops.controller";
+import { BarbershopsService } from "./barbershops.service";
 
-describe("TenantsController", () => {
-	let controller: TenantsController;
+describe("BarbershopsController", () => {
+	let controller: BarbershopsController;
+
+	const barbershopsServiceMock = {
+		findAll: jest.fn(),
+	};
 
 	beforeEach(async () => {
 		const module: TestingModule = await Test.createTestingModule({
-			controllers: [TenantsController],
-			providers: [TenantsService],
+			controllers: [BarbershopsController],
+			providers: [
+				{
+					provide: BarbershopsService,
+					useValue: barbershopsServiceMock,
+				},
+			],
 		}).compile();
 
-		controller = module.get<TenantsController>(TenantsController);
+		controller = module.get<BarbershopsController>(BarbershopsController);
 	});
 
 	it("should be defined", () => {

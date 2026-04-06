@@ -1,214 +1,317 @@
-import { format } from "date-fns";
-import { Barber, BarberService, PrismaClient } from "@prisma/client";
-import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
+import "dotenv/config";
 import { Pool } from "pg";
 
-// Função auxiliar se vier apenas string "HH:mm"
-function createDateFromTime(timeString: string) {
-	const [hours, minutes] = timeString.split(":").map(Number);
-	const date = new Date();
-	date.setHours(hours, minutes, 0, 0);
-	return date;
+type CreatedBarber = {
+	barberId: string;
+	tenantId: string;
+	services: Array<{ id: string; priceInCents: number }>;
+};
+
+const AVATAR_IMAGES = [
+	"https://images.unsplash.com/photo-1521119989659-a83eee488004?auto=format&fit=crop&w=800&q=80",
+	"https://images.unsplash.com/photo-1517832606299-7ae9b720a186?auto=format&fit=crop&w=800&q=80",
+	"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80",
+	"https://images.unsplash.com/photo-1545167622-3a6ac756afa4?auto=format&fit=crop&w=800&q=80",
+	"https://images.unsplash.com/photo-1541534401786-2077eed87a72?auto=format&fit=crop&w=800&q=80",
+	"https://images.unsplash.com/photo-1542178243-bc20204b769f?auto=format&fit=crop&w=800&q=80",
+];
+
+const BARBERSHOPS = [
+	{
+		name: "Barbearia Navalha de Ouro",
+		slug: "barbearia-navalha-de-ouro",
+		address: "Rua Augusta, 1450 - Consolacao, Sao Paulo - SP",
+	},
+	{
+		name: "Corte Fino Studio",
+		slug: "corte-fino-studio",
+		address: "Av. Rio Branco, 500 - Centro, Rio de Janeiro - RJ",
+	},
+	{
+		name: "Dom Bigode Barber Club",
+		slug: "dom-bigode-barber-club",
+		address: "Rua da Bahia, 980 - Lourdes, Belo Horizonte - MG",
+	},
+];
+
+const BARBER_NAMES = [
+	"Rafael Lacerda",
+	"Bruno Toledo",
+	"Lucas Mendes",
+	"Tiago Rocha",
+	"Guilherme Prado",
+	"Matheus Vieira",
+	"Enzo Martins",
+	"Caio Freitas",
+	"Diego Arantes",
+	"Vinicius Serra",
+	"Felipe Nogueira",
+	"Renan Duarte",
+	"Igor Pacheco",
+	"Leandro Salles",
+	"Anderson Luz",
+];
+
+const CLIENTS = [
+	{ name: "Marcos Vinicius", email: "marcos.vinicius@seed.dev" },
+	{ name: "Paulo Henrique", email: "paulo.henrique@seed.dev" },
+	{ name: "Andre Luiz", email: "andre.luiz@seed.dev" },
+];
+
+const SERVICE_TEMPLATES = [
+	{
+		name: "Corte Social",
+		description: "Corte classico com acabamento na navalha.",
+		priceInCents: 4500,
+		durationInMinutes: 45,
+		imageUrl:
+			"https://images.unsplash.com/photo-1622287162716-f311baa1a2b8?auto=format&fit=crop&w=900&q=80",
+	},
+	{
+		name: "Barba Completa",
+		description: "Modelagem de barba com toalha quente e finalizacao.",
+		priceInCents: 3500,
+		durationInMinutes: 35,
+		imageUrl:
+			"https://images.unsplash.com/photo-1512690459411-b0fdc5d3b5b9?auto=format&fit=crop&w=900&q=80",
+	},
+	{
+		name: "Corte + Barba",
+		description: "Pacote completo para renovar o visual.",
+		priceInCents: 7500,
+		durationInMinutes: 70,
+		imageUrl:
+			"https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=900&q=80",
+	},
+	{
+		name: "Pigmentacao de Barba",
+		description: "Uniformizacao e cobertura de falhas na barba.",
+		priceInCents: 4000,
+		durationInMinutes: 40,
+		imageUrl:
+			"https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=900&q=80",
+	},
+	{
+		name: "Tratamento Capilar",
+		description: "Hidratacao e revitalizacao do couro cabeludo.",
+		priceInCents: 5000,
+		durationInMinutes: 50,
+		imageUrl:
+			"https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=900&q=80",
+	},
+];
+
+const PLANS = [
+	{
+		name: "Plano gratis",
+		description: "Plano de entrada para conhecer a plataforma.",
+		priceInCents: 0,
+		benefits: ["1 agendamento por mes", "Lembretes de horario"],
+	},
+	{
+		name: "Plano Corte Ilimitado",
+		description: "Cortes de cabelo ilimitados durante o periodo ativo.",
+		priceInCents: 8900,
+		benefits: ["Cortes ilimitados", "Prioridade no agendamento"],
+		stripePriceId: "price_seed_corte_ilimitado",
+	},
+	{
+		name: "Plano Barba Ilimitada",
+		description: "Servicos de barba ilimitados durante o periodo ativo.",
+		priceInCents: 6900,
+		benefits: ["Barba ilimitada", "10% em servicos extras"],
+		stripePriceId: "price_seed_barba_ilimitada",
+	},
+	{
+		name: "Plano Corte e Barba Ilimitados",
+		description: "Plano completo com corte e barba sem limites.",
+		priceInCents: 12900,
+		benefits: ["Corte ilimitado", "Barba ilimitada", "Atendimento prioritario"],
+		stripePriceId: "price_seed_corte_barba_ilimitados",
+	},
+];
+
+function timeToDate(time: string): Date {
+	const [hours, minutes] = time.split(":").map(Number);
+	return new Date(Date.UTC(1970, 0, 1, hours, minutes, 0, 0));
+}
+
+function pickRandom<T>(values: T[]): T {
+	return values[Math.floor(Math.random() * values.length)];
+}
+
+async function createBetterAuthAccount(
+	prisma: PrismaClient,
+	userId: string,
+	email: string
+) {
+	await prisma.account.create({
+		data: {
+			id: crypto.randomUUID(),
+			accountId: email,
+			providerId: "credential",
+			userId,
+			password: "seed_password_hash",
+		},
+	});
+}
+
+async function resetDatabase(prisma: PrismaClient) {
+	await prisma.rating.deleteMany();
+	await prisma.booking.deleteMany();
+	await prisma.subscription.deleteMany();
+	await prisma.socialMedia.deleteMany();
+	await prisma.exceptionDate.deleteMany();
+	await prisma.barberDisponibility.deleteMany();
+	await prisma.barberBreak.deleteMany();
+	await prisma.barberService.deleteMany();
+	await prisma.barber.deleteMany();
+	await prisma.userTenant.deleteMany();
+	await prisma.plan.deleteMany();
+	await prisma.session.deleteMany();
+	await prisma.account.deleteMany();
+	await prisma.verification.deleteMany();
+	await prisma.barbershop.deleteMany();
+	await prisma.user.deleteMany();
 }
 
 async function seedDatabase() {
-	const startTime = createDateFromTime("09:00");
-	const endTime = createDateFromTime("21:00");
-
 	const connectionString = process.env.DATABASE_URL as string;
-
 	const pool = new Pool({ connectionString });
 	const adapter = new PrismaPg(pool);
-
 	const prisma = new PrismaClient({ adapter });
 
+	const availabilityStart = timeToDate("08:00");
+	const availabilityEnd = timeToDate("18:00");
+	const referenceDate = new Date("2026-04-06T15:40:00-03:00");
+	const now = new Date();
+	const futureBase = now > referenceDate ? now : referenceDate;
+
 	try {
-		const images = [
-			"https://utfs.io/f/c97a2dc9-cf62-468b-a851-bfd2bdde775f-16p.png",
-			"https://utfs.io/f/45331760-899c-4b4b-910e-e00babb6ed81-16q.png",
-			"https://utfs.io/f/5832df58-cfd7-4b3f-b102-42b7e150ced2-16r.png",
-			"https://utfs.io/f/7e309eaa-d722-465b-b8b6-76217404a3d3-16s.png",
-			"https://utfs.io/f/178da6b6-6f9a-424a-be9d-a2feb476eb36-16t.png",
-			"https://utfs.io/f/2f9278ba-3975-4026-af46-64af78864494-16u.png",
-			"https://utfs.io/f/988646ea-dcb6-4f47-8a03-8d4586b7bc21-16v.png",
-			"https://utfs.io/f/60f24f5c-9ed3-40ba-8c92-0cd1dcd043f9-16w.png",
-			"https://utfs.io/f/f64f1bd4-59ce-4ee3-972d-2399937eeafc-16x.png",
-			"https://utfs.io/f/e995db6d-df96-4658-99f5-11132fd931e1-17j.png",
-			"https://utfs.io/f/3bcf33fc-988a-462b-8b98-b811ee2bbd71-17k.png",
-			"https://utfs.io/f/5788be0e-2307-4bb4-b603-d9dd237950a2-17l.png",
-		];
+		await resetDatabase(prisma);
 
-		const services = [
-			{
-				name: "Corte de Cabelo",
-				description: "Estilo personalizado com as últimas tendências.",
-				price: 35,
-				imageUrl:
-					"https://utfs.io/f/0ddfbd26-a424-43a0-aaf3-c3f1dc6be6d1-1kgxo7.png",
-			},
-			{
-				name: "Barba",
-				description: "Modelagem completa para destacar sua masculinidade.",
-				price: 30,
-				imageUrl:
-					"https://utfs.io/f/e6bdffb6-24a9-455b-aba3-903c2c2b5bde-1jo6tu.png",
-			},
-			{
-				name: "Pézinho",
-				description: "Acabamento perfeito para um visual renovado.",
-				price: 35,
-				imageUrl:
-					"https://utfs.io/f/8a457cda-f768-411d-a737-cdb23ca6b9b5-b3pegf.png",
-			},
-			{
-				name: "Sobrancelha",
-				description: "Expressão acentuada com modelagem precisa.",
-				price: 10,
-				imageUrl:
-					"https://utfs.io/f/2118f76e-89e4-43e6-87c9-8f157500c333-b0ps0b.png",
-			},
-			{
-				name: "Massagem",
-				description: "Relaxe com uma massagem revigorante.",
-				price: 50,
-				imageUrl:
-					"https://utfs.io/f/c4919193-a675-4c47-9f21-ebd86d1c8e6a-4oen2a.png",
-			},
-			{
-				name: "Hidratação",
-				description: "Hidratação profunda para cabelo e barba.",
-				price: 25,
-				imageUrl:
-					"https://utfs.io/f/8a457cda-f768-411d-a737-cdb23ca6b9b5-b3pegf.png",
-			},
-			{
-				name: "Platinado + Corte",
-				description: "Hidratação profunda para cabelo e barba.",
-				price: 120,
-				imageUrl:
-					"https://utfs.io/f/8a457cda-f768-411d-a737-cdb23ca6b9b5-b3pegf.png",
-			},
-			{
-				name: "Luzes + Corte",
-				description: "Hidratação profunda para cabelo e barba.",
-				price: 100,
-				imageUrl:
-					"https://utfs.io/f/8a457cda-f768-411d-a737-cdb23ca6b9b5-b3pegf.png",
-			},
-		];
-
-		const plans = {
-			hair: {
-				name: "Hair",
-				description: "Cortes de cabelo ilimitados por mês",
-				priceInCents: 8000,
-				stripePriceId: "price_1Sf3aPLZmTtv3cllAd2ewhDQ",
-			},
-			beard: {
-				name: "Beard",
-				description: "Serviços de barba ilimitados por mês",
-				priceInCents: 7000,
-				stripePriceId: "price_1SfJCWLZmTtv3cllEvJ1kLV8",
-			},
-			hairAndBeard: {
-				name: "Hair and Beard",
-				description: "Cortes e barba ilimitados por mês",
-				priceInCents: 15000,
-				stripePriceId: "price_1SfJCmLZmTtv3cllXAzpWq1a",
-			},
-		};
-
-		const barbershopConfigs = [
-			{
-				name: "BarberShop 2w",
-				slug: "barbershop-2w",
-				address: "Av. Paulista, 1000, São Paulo - SP",
-				logo: "https://3tlh7aktl6.ufs.sh/f/tcFRjMXVSkQ0Asb1IxZDwZ30bIph8P2qjXfOcVJmTvFtnMxi",
-				planKeys: ["hair", "hairAndBeard"],
-				barberNames: ["Ceara do Corte", "Davi Barber", "Rafael Cuts"],
-				clientUser: {
-					idPrefix: "client-2w",
-					name: "João Silva",
-					email: "joao.silva@barbershop-2w.com",
+		const createdPlans = [] as Array<{ id: string; name: string }>;
+		for (const plan of PLANS) {
+			const createdPlan = await prisma.plan.create({
+				data: {
+					name: plan.name,
+					description: plan.description,
+					priceInCents: plan.priceInCents,
+					benefits: plan.benefits,
+					stripePriceId: plan.stripePriceId,
+					tenantId: null,
 				},
-			},
-			{
-				name: "Barbearia do Zé",
-				slug: "barbearia-do-ze",
-				address: "Rua das Flores, 200, Rio de Janeiro - RJ",
-				logo: "https://utfs.io/f/0522fdaf-0357-4213-8f52-1d83c3dcb6cd-18e.png",
-				planKeys: ["beard"],
-				barberNames: ["Tuco do Corte", "Lucas Barbeiro", "Pedro Style"],
-				clientUser: {
-					idPrefix: "client-ze",
-					name: "Carlos Souza",
-					email: "carlos.souza@barbearia-do-ze.com",
-				},
-			},
-		];
+			});
+			createdPlans.push({ id: createdPlan.id, name: createdPlan.name });
+		}
 
-		await prisma.plan.upsert({
-			where: { id: "global-free" },
-			update: {},
-			create: {
-				id: "global-free",
-				name: "FREE",
-				description: "Plano gratuito padrão",
-				priceInCents: 0,
-				tenantId: null,
-			},
-		});
-
-		let imageIndex = 0;
-		let totalBarbershops = 0;
-		let totalBarbers = 0;
-		let totalBookings = 0;
-		let totalPlans = 1;
-
-		for (const barbershop of barbershopConfigs) {
+		const createdTenants = [] as Array<{ id: string; slug: string }>;
+		for (const shop of BARBERSHOPS) {
 			const tenant = await prisma.barbershop.create({
 				data: {
-					name: barbershop.name,
-					slug: barbershop.slug,
-					address: barbershop.address,
-					logo: barbershop.logo,
+					name: shop.name,
+					slug: shop.slug,
+					address: shop.address,
+					imageUrl:
+						AVATAR_IMAGES[Math.floor(Math.random() * AVATAR_IMAGES.length)],
+				},
+			});
+			createdTenants.push({ id: tenant.id, slug: tenant.slug });
+		}
+
+		const clients = [] as Array<{ id: string; name: string; email: string }>;
+		for (const [index, client] of CLIENTS.entries()) {
+			const createdUser = await prisma.user.create({
+				data: {
+					name: client.name,
+					email: client.email,
+					emailVerified: true,
+					role: "CLIENT",
+					passwordHash: "seed_password_hash",
+					image: AVATAR_IMAGES[index % AVATAR_IMAGES.length],
 				},
 			});
 
-			totalBarbershops += 1;
+			await createBetterAuthAccount(prisma, createdUser.id, createdUser.email);
+			clients.push({
+				id: createdUser.id,
+				name: createdUser.name,
+				email: createdUser.email,
+			});
+		}
 
-			for (const planKey of barbershop.planKeys) {
-				const plan = plans[planKey as keyof typeof plans];
-				await prisma.plan.create({
+		await prisma.userTenant.create({
+			data: {
+				userId: clients[0].id,
+				tenantId: createdTenants[0].id,
+				role: "CLIENT",
+			},
+		});
+
+		await prisma.userTenant.create({
+			data: {
+				userId: clients[1].id,
+				tenantId: createdTenants[1].id,
+				role: "CLIENT",
+			},
+		});
+
+		await prisma.userTenant.create({
+			data: {
+				userId: clients[2].id,
+				tenantId: createdTenants[2].id,
+				role: "CLIENT",
+			},
+		});
+
+		await prisma.userTenant.create({
+			data: {
+				userId: clients[0].id,
+				tenantId: createdTenants[1].id,
+				role: "CLIENT",
+			},
+		});
+
+		const tenantClients = new Map<string, string[]>();
+		tenantClients.set(createdTenants[0].id, [clients[0].id]);
+		tenantClients.set(createdTenants[1].id, [clients[1].id, clients[0].id]);
+		tenantClients.set(createdTenants[2].id, [clients[2].id]);
+
+		const createdBarbers: CreatedBarber[] = [];
+		let barberNameIndex = 0;
+
+		for (const tenant of createdTenants) {
+			for (let barberIndex = 0; barberIndex < 5; barberIndex++) {
+				const barberName = BARBER_NAMES[barberNameIndex];
+				const emailLocal = barberName
+					.toLowerCase()
+					.normalize("NFD")
+					.replace(/[\u0300-\u036f]/g, "")
+					.replace(/[^a-z0-9]+/g, ".")
+					.replace(/^\.|\.$/g, "");
+				const barberEmail = `${emailLocal}.${tenant.slug}@seed.dev`;
+
+				const barberUser = await prisma.user.create({
 					data: {
-						...plan,
-						tenantId: tenant.id,
-					},
-				});
-
-				totalPlans += 1;
-			}
-
-			const tenantBarbers: { barber: Barber; services: BarberService[] }[] = [];
-
-			for (const name of barbershop.barberNames) {
-				const imageUrl = images[imageIndex % images.length];
-				const emailSlug = name.toLowerCase().replace(/ /g, ".");
-				const email = `${emailSlug}.${imageIndex}@${barbershop.slug}.com`;
-
-				const user = await prisma.user.create({
-					data: {
-						name,
-						email,
+						name: barberName,
+						email: barberEmail,
 						emailVerified: true,
-						image: imageUrl,
+						role: "BARBER",
+						passwordHash: "seed_password_hash",
+						image:
+							AVATAR_IMAGES[
+								(barberNameIndex + barberIndex) % AVATAR_IMAGES.length
+							],
 					},
 				});
+
+				await createBetterAuthAccount(prisma, barberUser.id, barberUser.email);
 
 				await prisma.userTenant.create({
 					data: {
-						userId: user.id,
+						userId: barberUser.id,
 						tenantId: tenant.id,
 						role: "BARBER",
 					},
@@ -216,116 +319,195 @@ async function seedDatabase() {
 
 				const barber = await prisma.barber.create({
 					data: {
-						userId: user.id,
+						phone: `+55 11 90000-${String(barberNameIndex + 1000).slice(-4)}`,
+						userId: barberUser.id,
 						tenantId: tenant.id,
-						phone: "(11) 99999-9999",
 					},
 				});
 
-				const createdServices: BarberService[] = [];
+				for (let day = 1; day <= 6; day++) {
+					await prisma.barberDisponibility.create({
+						data: {
+							barberId: barber.id,
+							tenantId: tenant.id,
+							dayOfWeek: day,
+							startTime: availabilityStart,
+							endTime: availabilityEnd,
+						},
+					});
 
-				for (const service of services) {
+					await prisma.barberBreak.create({
+						data: {
+							barberId: barber.id,
+							tenantId: tenant.id,
+							dayOfWeek: day,
+							startTime: "12:00",
+							endTime: "14:00",
+						},
+					});
+				}
+
+				const services = [] as Array<{ id: string; priceInCents: number }>;
+				for (const service of SERVICE_TEMPLATES) {
 					const createdService = await prisma.barberService.create({
 						data: {
 							name: service.name,
 							description: service.description,
-							priceInCents: service.price * 100,
-							barber: {
-								connect: {
-									id: barber.id,
-								},
-							},
 							imageUrl: service.imageUrl,
-							tenant: {
-								connect: {
-									id: tenant.id,
-								},
-							},
+							priceInCents: service.priceInCents,
+							durationInMinutes: service.durationInMinutes,
+							barberId: barber.id,
+							tenantId: tenant.id,
 						},
 					});
-
-					createdServices.push(createdService);
+					services.push({
+						id: createdService.id,
+						priceInCents: createdService.priceInCents,
+					});
 				}
 
-				tenantBarbers.push({ barber, services: createdServices });
-				totalBarbers += 1;
-				imageIndex += 1;
-			}
-
-			const clientUser = await prisma.user.create({
-				data: {
-					id: `${barbershop.clientUser.idPrefix}-${tenant.id}`,
-					name: barbershop.clientUser.name,
-					email: barbershop.clientUser.email,
-					emailVerified: true,
-				},
-			});
-
-			await prisma.userTenant.upsert({
-				where: {
-					userId_tenantId: { userId: clientUser.id, tenantId: tenant.id },
-				},
-				update: {},
-				create: { userId: clientUser.id, tenantId: tenant.id, role: "CLIENT" },
-			});
-
-			const bookingServices = tenantBarbers[0].services.slice(0, 4);
-			const pastDates = [
-				new Date("2024-12-01T10:00:00Z"),
-				new Date("2024-12-05T14:00:00Z"),
-				new Date("2024-12-12T16:00:00Z"),
-				new Date("2024-12-18T11:00:00Z"),
-				new Date("2024-12-22T15:00:00Z"),
-				new Date("2024-12-28T09:00:00Z"),
-			];
-
-			for (let i = 0; i < pastDates.length; i++) {
-				const service = bookingServices[i % bookingServices.length];
-
-				await prisma.booking.create({
-					data: {
-						date: pastDates[i],
-						status: "COMPLETED",
-						paidWithSubscription: false,
-						priceInCents: service.priceInCents,
-						userId: clientUser.id,
-						barberId: tenantBarbers[0].barber.id,
-						serviceId: service.id,
-						tenantId: tenant.id,
-					},
+				createdBarbers.push({
+					barberId: barber.id,
+					tenantId: tenant.id,
+					services,
 				});
 
-				totalBookings += 1;
-			}
-
-			for (const entry of tenantBarbers) {
-				for (let day = 1; day <= 5; day++) {
-					await prisma.barberDisponibility.create({
-						data: {
-							barberId: entry.barber.id,
-							tenantId: tenant.id,
-							dayOfWeek: day,
-							startTime: new Date(startTime),
-							endTime: new Date(endTime),
-						},
-					});
-				}
+				barberNameIndex += 1;
 			}
 		}
 
-		console.log("✅ Seed concluído com sucesso!");
-		console.log(`- ${totalBarbershops} barbearias criadas`);
-		console.log(`- ${totalBarbers} barbeiros criados`);
-		console.log(`- ${totalBookings} agendamentos passados criados`);
-		console.log(`- ${totalPlans} planos criados`);
-		console.log(
-			`- Configurações de disponibilidade criadas para cada barbeiro iniciando as ${format(startTime, "HH:mm")} até ${format(endTime, "HH:mm")} de segunda a sexta.`
+		const pastBookings = [] as Array<{
+			id: string;
+			barberId: string;
+			userId: string;
+			tenantId: string;
+		}>;
+
+		for (const barber of createdBarbers) {
+			const possibleClientIds = tenantClients.get(barber.tenantId) ?? [];
+			for (const [serviceIndex, service] of barber.services.entries()) {
+				const date = new Date(futureBase);
+				date.setDate(
+					date.getDate() -
+						(serviceIndex + 1) * 3 -
+						Math.floor(Math.random() * 2)
+				);
+				const allowedHours = [8, 9, 10, 11, 14, 15, 16, 17];
+				date.setHours(
+					allowedHours[serviceIndex % allowedHours.length],
+					0,
+					0,
+					0
+				);
+
+				const createdBooking = await prisma.booking.create({
+					data: {
+						date,
+						serviceId: service.id,
+						userId: pickRandom(possibleClientIds),
+						tenantId: barber.tenantId,
+						barberId: barber.barberId,
+						status: "COMPLETED",
+						priceInCents: service.priceInCents,
+						paidWithSubscription: false,
+						paymentMethod: "pix",
+					},
+				});
+
+				pastBookings.push({
+					id: createdBooking.id,
+					barberId: barber.barberId,
+					userId: createdBooking.userId,
+					tenantId: barber.tenantId,
+				});
+			}
+		}
+
+		for (const [index, booking] of pastBookings.entries()) {
+			if (index % 2 === 0 || index % 5 === 0) {
+				await prisma.rating.create({
+					data: {
+						bookingId: booking.id,
+						barberId: booking.barberId,
+						userId: booking.userId,
+						tenantId: booking.tenantId,
+						ratingValue: 4 + (index % 2),
+						comment:
+							index % 3 === 0
+								? "Atendimento excelente e muito pontual."
+								: "Otimo servico, volto novamente.",
+						asked: true,
+					},
+				});
+			}
+		}
+
+		for (let i = 0; i < 10; i++) {
+			const barber = pickRandom(createdBarbers);
+			const service = pickRandom(barber.services);
+			const possibleClientIds = tenantClients.get(barber.tenantId) ?? [];
+
+			const date = new Date(futureBase);
+			date.setDate(date.getDate() + 1 + Math.floor(Math.random() * 7));
+			const allowedHours = [8, 9, 10, 11, 14, 15, 16, 17];
+			date.setHours(
+				pickRandom(allowedHours),
+				Math.random() > 0.5 ? 0 : 30,
+				0,
+				0
+			);
+
+			await prisma.booking.create({
+				data: {
+					date,
+					serviceId: service.id,
+					userId: pickRandom(possibleClientIds),
+					tenantId: barber.tenantId,
+					barberId: barber.barberId,
+					status: "SCHEDULED",
+					priceInCents: service.priceInCents,
+					paidWithSubscription: false,
+					paymentMethod: "pix",
+				},
+			});
+		}
+
+		const subscriptionPlan = createdPlans.find((plan) =>
+			plan.name.includes("Corte Ilimitado")
 		);
 
-		await prisma.$disconnect();
+		await prisma.subscription.create({
+			data: {
+				planId: subscriptionPlan?.id,
+				stripeCustomerId: "cus_seed_cliente_001",
+				stripeSubscriptionId: "sub_seed_cliente_001",
+				status: "ACTIVE",
+				periodStart: new Date(futureBase),
+				periodEnd: new Date(futureBase.getTime() + 1000 * 60 * 60 * 24 * 30),
+				trialStart: null,
+				trialEnd: null,
+				cancelAtPeriodEnd: false,
+				seats: 1,
+				userId: clients[0].id,
+				tenantId: createdTenants[0].id,
+			},
+		});
+
+		console.log("Seed concluido com sucesso.");
+		console.log(`Barbearias: ${createdTenants.length}`);
+		console.log(`Barbeiros: ${createdBarbers.length}`);
+		console.log("Servicos por barbeiro: 5");
+		console.log(`Agendamentos passados: ${pastBookings.length}`);
+		console.log("Agendamentos futuros: 10");
+		console.log(`Planos: ${createdPlans.length}`);
+		console.log("Assinaturas: 1");
 	} catch (error) {
-		console.error("Erro ao criar as barbearias:", error);
+		console.error("Erro ao executar seed:", error);
+		process.exitCode = 1;
+	} finally {
+		await prisma.$disconnect();
+		await pool.end();
 	}
 }
 
-seedDatabase();
+void seedDatabase();

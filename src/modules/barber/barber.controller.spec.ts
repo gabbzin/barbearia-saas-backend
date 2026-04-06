@@ -1,20 +1,30 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { BarberController } from './barber.controller';
-import { BarberService } from './barber.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { BarberController } from "./barber.controller";
+import { BarberService } from "./barber.service";
 
-describe('BarberController', () => {
-  let controller: BarberController;
+describe("BarberController", () => {
+	let controller: BarberController;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [BarberController],
-      providers: [BarberService],
-    }).compile();
+	const barberServiceMock = {
+		findAll: jest.fn(),
+		findUnique: jest.fn(),
+	};
 
-    controller = module.get<BarberController>(BarberController);
-  });
+	beforeEach(async () => {
+		const module: TestingModule = await Test.createTestingModule({
+			controllers: [BarberController],
+			providers: [
+				{
+					provide: BarberService,
+					useValue: barberServiceMock,
+				},
+			],
+		}).compile();
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
+		controller = module.get<BarberController>(BarberController);
+	});
+
+	it("should be defined", () => {
+		expect(controller).toBeDefined();
+	});
 });

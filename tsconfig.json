@@ -1,30 +1,38 @@
 {
-  "compilerOptions": {
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "ignoreDeprecations": "6.0",
-    "target": "ES2023",
-    "baseUrl": ".",
-    "paths": {
-      "src/*": ["src/*"]
-    },
-    "declaration": true,
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "sourceMap": true,
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "incremental": true,
-    "skipLibCheck": true,
-    "strictNullChecks": true,
-    "strictPropertyInitialization": false,
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
-  },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "test", "prisma", "*.config.ts", "*.config.mjs"]
+	"compilerOptions": {
+		"module": "nodenext",
+		"moduleResolution": "nodenext",
+		"ignoreDeprecations": "6.0",
+		"target": "ES2023",
+		"baseUrl": ".",
+		"paths": {
+			"src/*": ["src/*"]
+		},
+		"declaration": true,
+		"removeComments": true,
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true,
+		"allowSyntheticDefaultImports": true,
+		"sourceMap": true,
+		"outDir": "./dist",
+		"rootDir": "./src",
+		"incremental": true,
+		"skipLibCheck": true,
+		"strictNullChecks": true,
+		"strictPropertyInitialization": false,
+		"forceConsistentCasingInFileNames": true,
+		"noImplicitAny": false,
+		"strictBindCallApply": false,
+		"noFallthroughCasesInSwitch": false,
+		"types": ["node", "jest"]
+	},
+	"include": ["src/**/*.ts"],
+	"exclude": [
+		"node_modules",
+		"dist",
+		"test",
+		"prisma",
+		"*.config.ts",
+		"*.config.mjs"
+	]
 }
