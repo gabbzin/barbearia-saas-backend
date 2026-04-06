@@ -1,17 +1,30 @@
 {
-  "$schema": "https://www.schemastore.org/tsconfig",
-  "display": "Node 22",
-  "_version": "22.0.0",
-
   "compilerOptions": {
-    "lib": ["es2024", "ESNext.Array", "ESNext.Collection", "ESNext.Iterator"],
     "module": "nodenext",
-    "target": "es2022",
-    "noEmit": true,
+    "moduleResolution": "nodenext",
+    "ignoreDeprecations": "6.0",
+    "target": "ES2023",
+    "baseUrl": ".",
+    "paths": {
+      "src/*": ["src/*"]
+    },
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "outDir": "./dist",
     "rootDir": "./src",
-    "strict": true,
-    "esModuleInterop": true,
+    "incremental": true,
     "skipLibCheck": true,
-    "moduleResolution": "node16"
-  }
+    "strictNullChecks": true,
+    "strictPropertyInitialization": false,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "noFallthroughCasesInSwitch": false
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "test", "prisma", "*.config.ts", "*.config.mjs"]
 }

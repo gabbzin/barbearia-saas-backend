@@ -61,10 +61,15 @@ export class PrismaService
 					async $allOperations({ model, operation, args, query }) {
 						const tenantModels = [
 							"Barber",
+							"BarberBreak",
+							"BarberDisponibility",
 							"BarberService",
 							"Booking",
+							"ExceptionDate",
 							"Subscription",
 							"Plan",
+							"Rating",
+							"SocialMedia",
 							"UserTenant",
 						];
 
