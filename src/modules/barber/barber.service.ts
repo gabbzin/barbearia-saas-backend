@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { PrismaService } from "src/modules/database/prisma.service";
+import { PrismaService } from "../database/prisma.service";
 
 @Injectable()
 export class BarberService {
@@ -7,11 +7,11 @@ export class BarberService {
 
 	async findAll() {
 		try {
-			const result = await this.prisma.client.barber.findMany({
+			const result = await this.prisma.tenant.barber.findMany({
 				include: {
 					user: {
 						omit: {
-							passwordHash: true,
+							password: true,
 							stripeCustomerId: true,
 							id: true,
 						},

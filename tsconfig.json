@@ -1,25 +1,17 @@
 {
+  "$schema": "https://www.schemastore.org/tsconfig",
+  "display": "Node 22",
+  "_version": "22.0.0",
+
   "compilerOptions": {
-    "module": "commonjs",
-    "moduleResolution": "node",
-    // "resolvePackageJsonExports": true,
+    "lib": ["es2024", "ESNext.Array", "ESNext.Collection", "ESNext.Iterator"],
+    "module": "nodenext",
+    "target": "es2022",
+    "noEmit": true,
+    "rootDir": "./src",
+    "strict": true,
     "esModuleInterop": true,
-    // "isolatedModules": false,
-    "declaration": true,
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "target": "ES2023",
-    "sourceMap": true,
-    "outDir": "./dist",
-    "baseUrl": "./",
-    "incremental": true,
     "skipLibCheck": true,
-    "strictNullChecks": true,
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
+    "moduleResolution": "node16"
   }
 }
