@@ -12,11 +12,8 @@ model User {
   name             String
   email            String       @unique
   emailVerified    Boolean      @default(false)
-  role             userRole     @default(CLIENT)
-  password         String?
   passwordHash     String?
   image            String?
-  tenantId         String?
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @default(now()) @updatedAt
   stripeCustomerId String?
@@ -25,15 +22,15 @@ model User {
   ratings          Rating[]
   accounts         Account[]
   sessions         Session[]
+  bookings         Booking[]    @relation("ClientBookings")
 
-  @@map("user")
+  @@map("users")
 }
 
 model UserTenant {
   userId       String
   tenantId     String
   role         userRole      @default(CLIENT)
-  bookings     Booking[]
   subscription Subscription?
   tenant       Barbershop    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -124,7 +121,7 @@ model Barber {
   user           User?                 @relation("BarberAccount", fields: [userId], references: [id])
   barberBreaks   BarberBreak[]
   services       BarberService[]
-  bookings       Booking[]
+  bookings       Booking[]             @relation("BarberBookings")
   disponibility  BarberDisponibility[]
   exceptionDates ExceptionDate[]
   ratings        Rating[]
@@ -154,8 +151,8 @@ model BarberBreak {
   barberId  String
   tenantId  String
   dayOfWeek Int
-  startTime String
-  endTime   String
+  startTime DateTime   @db.Time()
+  endTime   DateTime   @db.Time()
   barber    Barber     @relation(fields: [barberId], references: [id], onDelete: Cascade)
   tenant    Barbershop @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -181,7 +178,7 @@ model Subscription {
 
   @@unique([userId, tenantId])
   @@index([userId, planId])
-  @@map("subscription")
+  @@map("subscriptions")
 }
 
 model Plan {
@@ -202,31 +199,40 @@ model Plan {
 }
 
 model Booking {
-  id                   String        @id @default(uuid())
-  date                 DateTime      @db.Timestamptz(6)
-  serviceId            String
-  userId               String
-  tenantId             String
-  barberId             String
-  userSubscriptionId   String?
-  paidWithSubscription Boolean       @default(false)
-  stripeChargeId       String?       @unique
-  stripeEventId        String?       @unique
-  cancelledAt          DateTime?     @db.Timestamptz(6)
-  createdAt            DateTime      @default(now())
-  status               BookingStatus @default(SCHEDULED)
-  updatedAt            DateTime      @updatedAt
+  // Infos básicas
+  id            String        @id @default(uuid())
+  date          DateTime      @db.Timestamptz(6)
+  serviceId     String
+  service       BarberService @relation(fields: [serviceId], references: [id])
+  status        BookingStatus @default(SCHEDULED)
+  paymentMethod String?
+
+  // Relações com o barbeiro e a barbearia
+  tenantId String
+  tenant   Barbershop @relation(fields: [tenantId], references: [id])
+  barberId String
+  barber   Barber     @relation("BarberBookings", fields: [barberId], references: [id])
+
+  // Cliente registrado
+  clientId String?
+  client   User?   @relation("ClientBookings", fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Cliente anonimo
+  customerName  String?
+  customerPhone String?
+
+  // Outras infos
+  paidWithSubscription Boolean   @default(false)
+  stripeChargeId       String?   @unique
+  stripeEventId        String?   @unique
+  cancelledAt          DateTime? @db.Timestamptz(6)
   priceInCents         Int
-  customerName         String?
-  customerPhone        String?
-  paymentMethod        String?
-  barber               Barber        @relation(fields: [barberId], references: [id])
-  tenant               Barbershop    @relation(fields: [tenantId], references: [id])
-  service              BarberService @relation(fields: [serviceId], references: [id])
-  userTenant           UserTenant    @relation(fields: [userId, tenantId], references: [userId, tenantId], onDelete: Cascade)
   rating               Rating?
 
-  @@index([userId, tenantId])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId, tenantId])
   @@index([barberId, date])
   @@index([tenantId, date])
   @@index([status])

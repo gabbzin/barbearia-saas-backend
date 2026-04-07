@@ -228,7 +228,6 @@ async function seedDatabase() {
 					name: client.name,
 					email: client.email,
 					emailVerified: true,
-					role: "CLIENT",
 					passwordHash: "seed_password_hash",
 					image: AVATAR_IMAGES[index % AVATAR_IMAGES.length],
 				},
@@ -298,7 +297,6 @@ async function seedDatabase() {
 						name: barberName,
 						email: barberEmail,
 						emailVerified: true,
-						role: "BARBER",
 						passwordHash: "seed_password_hash",
 						image:
 							AVATAR_IMAGES[
@@ -341,8 +339,8 @@ async function seedDatabase() {
 							barberId: barber.id,
 							tenantId: tenant.id,
 							dayOfWeek: day,
-							startTime: "12:00",
-							endTime: "14:00",
+							startTime: timeToDate("12:00"),
+							endTime: timeToDate("14:00"),
 						},
 					});
 				}
@@ -404,7 +402,7 @@ async function seedDatabase() {
 					data: {
 						date,
 						serviceId: service.id,
-						userId: pickRandom(possibleClientIds),
+						clientId: pickRandom(possibleClientIds),
 						tenantId: barber.tenantId,
 						barberId: barber.barberId,
 						status: "COMPLETED",
@@ -417,7 +415,7 @@ async function seedDatabase() {
 				pastBookings.push({
 					id: createdBooking.id,
 					barberId: barber.barberId,
-					userId: createdBooking.userId,
+					userId: createdBooking.clientId!,
 					tenantId: barber.tenantId,
 				});
 			}
@@ -461,7 +459,7 @@ async function seedDatabase() {
 				data: {
 					date,
 					serviceId: service.id,
-					userId: pickRandom(possibleClientIds),
+					clientId: pickRandom(possibleClientIds),
 					tenantId: barber.tenantId,
 					barberId: barber.barberId,
 					status: "SCHEDULED",
