@@ -1,81 +1,58 @@
 import { BadRequestException, Inject } from "@nestjs/common";
-import { PrismaService } from "../database/prisma.service";
 import { AUTH, AuthType } from "./auth.provider";
 import { I18nService } from "nestjs-i18n";
+import { AuthRepository } from "./auth.repository";
 
 export class AuthService {
 	constructor(
-		private readonly prisma: PrismaService,
+		private readonly repository: AuthRepository,
 		private readonly i18n: I18nService,
 		@Inject(AUTH) private readonly auth: AuthType
 	) {}
 
-	async registerClientInTenant(
+	private tenantIdError = "Tenant ID é obrigatório no header 'x-tenant-id'";
+	private registerUser = async ({ email, name, password }) => {
+		return await this.auth.api.signUpEmail({
+			body: {
+				email,
+				name,
+				password,
+			},
+			asResponse: false,
+		});
+	};
+
+	async registerUserInTenant(
 		data: {
 			name: string;
 			email: string;
 			password: string;
 		},
-		tenantId: string
+		tenantId: string,
+		role?: "BARBER" | "CLIENT"
 	) {
-		const { name, email, password } = data;
-
 		if (!tenantId) {
-			throw new BadRequestException(
-				"Tenant ID é obrigatório no header 'x-tenant-id'"
-			);
+			throw new BadRequestException(this.tenantIdError);
 		}
 
 		// Verificar se o tenant existe
-		const tenant = await this.prisma.barbershop.findUnique({
-			where: { id: tenantId },
-		});
+		const tenant = await this.repository.findUniqueByTenantId(tenantId);
 
 		if (!tenant) {
 			throw new BadRequestException(`Barbearia não encontrada`);
 		}
 
-		let user = await this.prisma.user.findUnique({ where: { email } });
-
+		let user = await this.repository.findUniqueByEmail(data.email);
+		let userId = user?.id;
 		let newUser;
 
 		if (!user) {
-			const response = await this.auth.api.signUpEmail({
-				body: {
-					email,
-					name,
-					password,
-				},
-				asResponse: false,
-			});
-
+			const response = await this.registerUser(data);
+			userId = response.user.id;
 			newUser = response.user;
 		}
 
-		const userId: string = newUser ? newUser.id : user!.id;
-
-		const existingLink = await this.prisma.userTenant.findUnique({
-			where: {
-				userId_tenantId: {
-					userId,
-					tenantId,
-				},
-			},
-		});
-
-		if (existingLink) {
-			throw new BadRequestException(
-				this.i18n.t("user.errors.USER_ALREADY_EXISTS")
-			);
-		}
-
-		await this.prisma.userTenant.create({
-			data: {
-				userId,
-				tenantId,
-				role: "CLIENT",
-			},
-		});
+		await this.repository.upsertUserTenantLink(userId!, tenantId, role);
 
 		return {
 			message: this.i18n.t("user.success.USER_CREATED"),

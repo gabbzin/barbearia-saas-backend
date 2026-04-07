@@ -13,16 +13,11 @@ export class AuthController {
 		private readonly authService: AuthService
 	) {}
 
-	@Post("register-client")
-	async registerClientInTenant(
+	@Post("register")
+	async registerUserInTenant(
 		@Body() body: RegisterUserDto,
 		@TenantId() tenantId: string
 	) {
-		return this.authService.registerClientInTenant(body, tenantId);
-	}
-
-	@All("*")
-	async handleAuth(@Req() req: Request, @Res() res: Response) {
-		return toNodeHandler(this.auth)(req, res);
+		return this.authService.registerUserInTenant(body, tenantId, "CLIENT");
 	}
 }

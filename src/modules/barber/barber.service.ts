@@ -1,23 +1,13 @@
 import { Injectable } from "@nestjs/common";
-import { PrismaService } from "../database/prisma.service";
+import { BarberRepository } from "./barber.repository";
 
 @Injectable()
 export class BarberService {
-	constructor(private readonly prisma: PrismaService) {}
+	constructor(private readonly repository: BarberRepository) {}
 
-	async findAll() {
+	async findAllBarbers() {
 		try {
-			const result = await this.prisma.tenant.barber.findMany({
-				include: {
-					user: {
-						omit: {
-							password: true,
-							stripeCustomerId: true,
-							id: true,
-						},
-					},
-				},
-			});
+			const result = await this.repository.findAll();
 
 			return result;
 		} catch (error) {
@@ -25,24 +15,15 @@ export class BarberService {
 		}
 	}
 
-	async findUnique(id: string) {
+	async findBarberForId(id: string) {
 		try {
-			const result = await this.prisma.tenant.barber.findUnique({
-				where: { id },
-				include: {
-					user: {
-						omit: {
-							password: true,
-							stripeCustomerId: true,
-							id: true,
-						},
-					},
-				},
-			});
+			const result = await this.repository.findUnique(id);
 
 			return result;
 		} catch (error) {
 			throw error;
 		}
 	}
+
+	async create() {}
 }

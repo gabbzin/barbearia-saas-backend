@@ -38,11 +38,11 @@ export class BookingService extends TenantBase {
 
 	// ================== Public Methods ==================
 
-	async findAllByUserId(userId: string) {
+	async findAllByClientId(clientId: string) {
 		try {
 			const result = await this.prisma.tenant.booking.findMany({
 				where: {
-					userId,
+					clientId,
 				},
 				include: {
 					barber: {
@@ -114,9 +114,9 @@ export class BookingService extends TenantBase {
 		return booking;
 	}
 
-	async cancel(userId: string, id: string) {
+	async cancel(clientId: string, id: string) {
 		const booking = await this.prisma.tenant.booking.findFirst({
-			where: { id, userId },
+			where: { id, clientId },
 		});
 
 		if (!booking) {

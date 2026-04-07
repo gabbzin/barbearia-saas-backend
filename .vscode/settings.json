@@ -5,9 +5,15 @@
 			"name": "nest-repository",
 			"base": "nest",
 			"color": "#009688"
+		},
+		{
+			"name": "nest-provider",
+			"base": "nest",
+			"color": "#FF8C00"
 		}
 	],
 	"material-icon-theme.files.associations": {
-		"*.repository.ts": "nest-repository"
+		"*.repository.ts": "nest-repository",
+		"*.provider.ts": "nest-provider"
 	}
 }

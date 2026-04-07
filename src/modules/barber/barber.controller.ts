@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from "@nestjs/common";
+import { Controller, Get, Param, Post } from "@nestjs/common";
 import { BarberService } from "./barber.service";
 
 @Controller("barber")
@@ -7,11 +7,14 @@ export class BarberController {
 
 	@Get()
 	async getBarbers() {
-		return this.barberService.findAll();
+		return this.barberService.findAllBarbers();
 	}
 
 	@Get(":id")
 	async getBarber(@Param("id") id: string) {
-		return this.barberService.findUnique(id);
+		return this.barberService.findBarberForId(id);
 	}
-} 
+
+	@Post()
+	async createBarber() {}
+}

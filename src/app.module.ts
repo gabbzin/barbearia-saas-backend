@@ -14,10 +14,11 @@ import {
 	QueryResolver,
 } from "nestjs-i18n";
 import { BarberServiceModule } from "./modules/barber-service/barber-service.module";
-import path from "path";
-import { json } from "express";
+import * as path from "path";
+import * as express from "express";
 import { BarbershopsModule } from "./modules/barbershops/barbershops.module";
 import { TenantMiddleware } from "./middlewares/tenant.middleware";
+import { AuthProvider } from "./modules/auth/auth.provider";
 
 @Module({
 	imports: [
@@ -45,7 +46,7 @@ import { TenantMiddleware } from "./middlewares/tenant.middleware";
 		ConfigModule.forRoot({ isGlobal: true, envFilePath: ".env" }),
 		PrismaModule,
 
-		AuthModule,
+		// AuthModule,
 		BarberModule,
 		UserModule,
 		BookingModule,
@@ -58,11 +59,8 @@ import { TenantMiddleware } from "./middlewares/tenant.middleware";
 export class AppModule {
 	configure(consumer: MiddlewareConsumer) {
 		consumer
-			.apply(json())
-			.exclude(
-				{ path: "auth", method: RequestMethod.ALL },
-				{ path: "auth/*path", method: RequestMethod.ALL }
-			)
+			.apply(express.json())
+			.exclude({ path: "api/auth/(.*)", method: RequestMethod.ALL })
 			.forRoutes("*");
 
 		consumer

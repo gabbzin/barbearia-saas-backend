@@ -20,7 +20,7 @@ export class BookingController {
 	@Get()
 	@UseGuards(AuthGuard)
 	async getBookings(@Session() session: UserSession) {
-		return this.bookingService.findAllByUserId(session.user.id);
+		return this.bookingService.findAllByClientId(session.user.id);
 	}
 
 	// ===== Usuários =====
