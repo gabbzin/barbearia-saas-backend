@@ -15,9 +15,9 @@ export class BarberService {
 		}
 	}
 
-	async findBarberForId(id: string) {
+	async findBarberById(id: string) {
 		try {
-			const result = await this.repository.findUnique(id);
+			const result = await this.repository.findUniqueById(id);
 
 			return result;
 		} catch (error) {
@@ -25,5 +25,5 @@ export class BarberService {
 		}
 	}
 
-	async create() {}
+	async createBarber(data: any) {}
 }

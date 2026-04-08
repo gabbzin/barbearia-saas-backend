@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { BarberService } from "./barber.service";
 
 @Controller("barber")
@@ -12,9 +12,11 @@ export class BarberController {
 
 	@Get(":id")
 	async getBarber(@Param("id") id: string) {
-		return this.barberService.findBarberForId(id);
+		return this.barberService.findBarberById(id);
 	}
 
 	@Post()
-	async createBarber() {}
+	async createBarber(@Body() body: any) {
+		return this.barberService.createBarber(body);
+	}
 }

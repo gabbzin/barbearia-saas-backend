@@ -42,7 +42,7 @@ export class AuthService {
 			throw new BadRequestException(`Barbearia não encontrada`);
 		}
 
-		let user = await this.repository.findUniqueByEmail(data.email);
+		const user = await this.repository.findUniqueByEmail(data.email);
 		let userId = user?.id;
 		let newUser;
 

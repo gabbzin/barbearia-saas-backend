@@ -2,4 +2,4 @@ echo "Formato esperado do commit:"
 echo "<tipo>: <descrição>"
 echo ""
 
-pnpm --no -- lint --edit "$1"
+pnpm --no -- lint --ext "$1"
