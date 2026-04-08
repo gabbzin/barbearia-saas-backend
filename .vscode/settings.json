@@ -10,10 +10,21 @@
 			"name": "nest-provider",
 			"base": "nest",
 			"color": "#FF8C00"
+		},
+		{
+			"name": "nest-dto",
+			"base": "nest",
+			"color": "#89ddff"
 		}
 	],
 	"material-icon-theme.files.associations": {
 		"*.repository.ts": "nest-repository",
-		"*.provider.ts": "nest-provider"
+		"*.provider.ts": "nest-provider",
+		"*.dto.ts": "nest-dto"
+	},
+
+	"material-icon-theme.folders.associations": {
+		"dto": "contract",
+		"dtos": "contract"
 	}
 }
